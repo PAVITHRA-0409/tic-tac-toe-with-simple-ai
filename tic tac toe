@@ -1,0 +1,131 @@
+"""Tic-Tac-Toe: Human (X) vs Computer (O) using the Minimax algorithm."""
+
+HUMAN = "X"
+COMPUTER = "O"
+
+WIN_LINES = [
+    (0, 1, 2), (3, 4, 5), (6, 7, 8),  # rows
+    (0, 3, 6), (1, 4, 7), (2, 5, 8),  # columns
+    (0, 4, 8), (2, 4, 6),             # diagonals
+]
+
+
+def display(board):
+    """Print the board; empty cells show their position number (1-9)."""
+    cells = [board[i] if board[i] != " " else str(i + 1) for i in range(9)]
+    print()
+    print(f" {cells[0]} | {cells[1]} | {cells[2]} ")
+    print("---+---+---")
+    print(f" {cells[3]} | {cells[4]} | {cells[5]} ")
+    print("---+---+---")
+    print(f" {cells[6]} | {cells[7]} | {cells[8]} ")
+    print()
+
+
+def check_winner(board):
+    """Return 'X' or 'O' if someone has won, else None."""
+    for a, b, c in WIN_LINES:
+        if board[a] != " " and board[a] == board[b] == board[c]:
+            return board[a]
+    return None
+
+
+def is_full(board):
+    return " " not in board
+
+
+def minimax(board, is_computer_turn, depth):
+    """Score a position from the computer's point of view.
+    +10 - depth : computer wins (sooner is better)
+    depth - 10  : human wins (later is better)
+    0           : draw
+    """
+    winner = check_winner(board)
+    if winner == COMPUTER:
+        return 10 - depth
+    if winner == HUMAN:
+        return depth - 10
+    if is_full(board):
+        return 0
+
+    if is_computer_turn:
+        best = -100
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = COMPUTER
+                best = max(best, minimax(board, False, depth + 1))
+                board[i] = " "  # undo the move
+        return best
+    else:
+        best = 100
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = HUMAN
+                best = min(best, minimax(board, True, depth + 1))
+                board[i] = " "
+        return best
+
+
+def computer_move(board):
+    """Pick the move with the highest minimax score."""
+    best_score, best_move = -100, None
+    for i in range(9):
+        if board[i] == " ":
+            board[i] = COMPUTER
+            score = minimax(board, False, 1)
+            board[i] = " "
+            if score > best_score:
+                best_score, best_move = score, i
+    return best_move
+
+
+def human_move(board):
+    while True:
+        choice = input("Your move (1-9): ").strip()
+        if not choice.isdigit() or not 1 <= int(choice) <= 9:
+            print("Enter a number from 1 to 9.")
+            continue
+        pos = int(choice) - 1
+        if board[pos] != " ":
+            print("That cell is taken. Try another.")
+            continue
+        return pos
+
+
+def play():
+    board = [" "] * 9
+    print("Tic-Tac-Toe: you are X, computer is O.")
+
+    first = input("Do you want to go first? (y/n): ").strip().lower()
+    human_turn = first != "n"
+
+    display(board)
+    while True:
+        if human_turn:
+            board[human_move(board)] = HUMAN
+        else:
+            move = computer_move(board)
+            board[move] = COMPUTER
+            print(f"Computer plays {move + 1}")
+
+        display(board)
+
+        winner = check_winner(board)
+        if winner == HUMAN:
+            print("You win!")
+            break
+        if winner == COMPUTER:
+            print("Computer wins. You lose!")
+            break
+        if is_full(board):
+            print("It's a draw!")
+            break
+
+        human_turn = not human_turn
+
+
+if __name__ == "__main__":
+    while True:
+        play()
+        if input("Play again? (y/n): ").strip().lower() != "y":
+            break
